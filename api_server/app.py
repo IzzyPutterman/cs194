@@ -51,6 +51,7 @@ def preprocess(img):
       img = img/255.
     if img.shape[1] != 3:
       img = img.transpose(0, 3, 1, 2)
+    # img = img[:, :, :224, :224]
     for i in range(img.shape[1]):
       img[:, i, :, :] = (img[:, i, :, :] - mean[i]) / std[i]
     return img
@@ -62,7 +63,8 @@ def predict():
     if request.method == 'POST':
         file = request.files['file']
         img_bytes = file.read()
-        img = np.array(Image.open(io.BytesIO(img_bytes)))
+        temp = Image.open(io.BytesIO(img_bytes))
+        img = np.array(temp.resize((224, 224)))
         low, high, rain = predicts(img)
         if rain[0] > rain[1]:
             return jsonify({'low': str(low), 'high': str(high), 'rain': False})
@@ -73,8 +75,8 @@ def predict():
         # print(image_url)
         if image_url is None:
             return "no image_url defined in query string"
-        img = np.array(read_image_pil(image_url))
-        # print(img.shape)
+        temp = read_image_pil(image_url)
+        img = np.array(temp.resize((224, 224)))
         low, high, rain = predicts(img)
         if rain[0] > rain[1]:
             return jsonify({'low': str(low), 'high': str(high), 'rain': False})
